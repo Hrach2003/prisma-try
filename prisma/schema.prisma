@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
+  output   = "../src/generated/type-graphql"
+  emitOnly = "enums,models,inputs,outputs"
+}
+
+enum UserRoles {
+  ROLE_ADMIN
+  ROLE_MODERATOR
+  ROLE_DEVELOPER
+}
+
+model User {
+  id       Int           @id @default(autoincrement())
+  email    String        @unique
+  name     String
+  avatar   String?
+  posts    Post[]
+  roles    Role[]
+  comments PostComment[]
+
+  @@map("user")
+}
+
+model Role {
+  id    Int       @id @default(autoincrement())
+  name  UserRoles @unique
+  users User[]
+
+  @@map("role")
+}
+
+model Post {
+  id       Int           @id @default(autoincrement())
+  authorId Int
+  author   User          @relation(fields: [authorId], references: [id])
+  content  String        @db.LongText
+  comments PostComment[]
+
+  @@map("post")
+}
+
+model PostComment {
+  id          Int    @id @default(autoincrement())
+  comment     String @db.Text
+  commenterId Int
+  commenter   User   @relation(fields: [commenterId], references: [id])
+  postId      Int
+  post        Post   @relation(fields: [postId], references: [id])
+
+  @@map("post_comment")
+}
